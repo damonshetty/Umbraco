@@ -1,0 +1,295 @@
+﻿@inherits UmbracoTemplatePage
+@using System.Configuration
+@using Umbraco.Web.Models
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta name="robots" content="index, follow">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@ConfigurationManager.AppSettings["WebsiteName"] - @CurrentPage.Name</title>
+    <meta name="description" content="@Model.Content.GetPropertyValue("metadataDescription")" />
+    <meta name="keywords" content="@Model.Content.GetPropertyValue("metadataKeywords")" />
+    @Styles.Render("~/bundles/css")
+    @Scripts.Render("~/bundles/scripts")
+    @if (Model.Content.HasProperty("socialMediaLabel"))
+        {
+            <meta property="og:url" content="@ConfigurationManager.AppSettings["WebsiteUrl"]@Umbraco.TypedContent(Model.Content.Id).UrlName" />
+            <meta property="og:type" content="website" />
+            <meta property="og:title" content="@Model.Content.GetPropertyValue("propertyOgtitle")" />
+            <meta property="og:description" content="@Model.Content.GetPropertyValue("propertyOgdescription")" />
+            <meta property="og:image" content="@(Model.Content.HasValue("propertyOgimage") ? ConfigurationManager.AppSettings["WebsiteUrl"] + Umbraco.TypedMedia(Model.Content.GetPropertyValue("propertyOgimage")).Url : "")" />
+        }
+    @RenderSection("styles", required: false)
+    @{
+        //Check web.config GoogleAnalytics
+        string GoogleAnalytics = ConfigurationManager.AppSettings["GoogleAnalytics"];
+        if (!GoogleAnalytics.IsNullOrWhiteSpace() && GoogleAnalytics == "true")
+        {
+            <!-- Global site tag (gtag.js) - Google Analytics -->
+            <script async src="https://www.googletagmanager.com/gtag/js?id=@ConfigurationManager.AppSettings["GoogleAnalyticsCode"]"></script>
+            <script>
+              window.dataLayer = window.dataLayer || [];
+              function gtag(){dataLayer.push(arguments);}
+              gtag('js', new Date());
+
+              gtag('config', '@ConfigurationManager.AppSettings["GoogleAnalyticsCode"]');
+            </script>
+        }
+    }
+</head>
+<body>
+    @{
+        IPublishedContent homeNode = Umbraco.TypedContentAtRoot().First<IPublishedContent>();
+
+        //Get HeaderNode
+        IPublishedContent HeaderNode = homeNode.Siblings<IPublishedContent>().Where(s => s.DocumentTypeAlias == "header").FirstOrDefault<IPublishedContent>();
+
+        //Get footer
+        IPublishedContent FooterNode = homeNode.Siblings<IPublishedContent>().Where(s => s.DocumentTypeAlias == "footer").FirstOrDefault<IPublishedContent>();
+        IPublishedContent FooterLinksNode = homeNode.Siblings<IPublishedContent>().Where(s => s.DocumentTypeAlias == "footerLinks").FirstOrDefault<IPublishedContent>();
+    }
+    <!--Main Container-->
+    <div class="container">
+
+        <!--Cookie notification-->
+        <div class="row cookies-bar background-color-nhs-dark-red" id="cookies-bar">
+
+            <div class="col-xs-10">
+                <p>This site uses cookies to improve your user experience. By using this site you agree to these cookies being set. To find out more, please read our <a href="/privacy-policy-and-cookies/">privacy policy</a>.</p>
+            </div>
+
+            <div class="col-xs-2 pull-right">
+                <!-- Button -->
+                <div class="form-group">
+                    <button type="submit" class="btn btn-primary" title="I accept Cookies" id="cookies-button">I accept</button>
+                </div>
+            </div>
+
+        </div>
+
+        <!--Header-->
+        <header class="row background-color-white header">
+
+            <div class="col-xs-12 height-100 padding-left-21">
+
+                <div class="col-md-12 height-100 padding-top-35 padding-left-14">
+
+                    <!--Search-->
+                    <div class="pull-left padding-right-15">
+                        <img src="~/images/icons/search-button-icon.png" class="cursor-pointer" alt="Search" title="Search" id="search-button" />
+                    </div>
+
+                    <!--Service Desk-->
+                    <div class="pull-left padding-right-15">
+                        <a href="/get-in-touch/it-help-and-support" title="Access IT help and support">
+                            <img src="~/images/icons/service-desk-icon.png" alt="Access IT help and support" />
+                        </a>
+                    </div>
+
+                    <!--Speech Bubble-->
+                    <div class="pull-left">
+                        <a href="/get-in-touch/general-enquiry" title="Contact NHS Informatics Merseyside">
+                            <img src="~/images/icons/speech-bubble-icon.png" alt="Contact NHS Informatics Merseyside" />
+                        </a>
+                    </div>
+
+                    <!--NHS Logo Blue-->
+                    <div class="nhs-header-logo pull-right">
+                        <a href="/"><img src="~/images/logos/NHS_Informatics_Merseyside.png" class="pull-right mobile-nhs-logo" alt="NHS Informatics Merseyside" title="NHS Informatics Merseyside" /></a>
+                        <a href="/"><img src="~/images/logos/NHS_Informatics_Merseyside_celebrating_70_years.png" class="pull-right desktop-nhs-logo" alt="NHS Informatics Merseyside" title="NHS Informatics Merseyside" /></a>
+                    </div>
+
+                </div>
+
+            </div>
+            <div class="clearfix"></div>
+
+            <!--Menu-->
+            <div class="padding-top-20">
+                @Html.Partial("~/Views/Partials/_SmartMegaMenu.cshtml")
+            </div>
+
+        </header>
+
+        <!--Search Bar-->
+        <div class="row background-color-nhs-dark-red search-bar height-100" id="search-bar">
+
+            <form class="form-inline" action="/search" style="width:300px;margin:auto;padding-top:30px;" id="search-form">
+
+                <fieldset class="search-fieldset">
+
+                    <!-- Search input-->
+                    <div class="pull-left margin-right-10">
+                        @*<label for="searchinput">Search</label>*@
+                        <input id="searchinput" name="search" type="search" placeholder="I'm looking for..." class="form-control input-md border-none" required="" value="@Request.QueryString["search"]">
+                    </div>
+
+                    <!-- Button -->
+                    <div class="form-group">
+                        <button type="submit" class="btn btn-primary" title="Search">Search</button>
+                    </div>
+
+                </fieldset>
+
+            </form>
+
+        </div>
+
+        <!--Carousel or Banner-->
+        <div class="row-for-carousel">
+            @RenderSection("banner", required: false)
+        </div>
+
+        <!--Main Content-->
+        <div class="row section-main-content">
+            @RenderBody()
+            @{
+                if (Model.Content.DocumentTypeAlias == "home" || Model.Content.DocumentTypeAlias == "landingPage")
+                {
+                }
+                else
+                {
+                    <!--Return link-->
+                    if (Model.Content.IsDescendant(homeNode))
+                    {
+                        <div class="return-link margin-top-30 margin-bottom-20">
+                            <a href="@Model.Content.Parent.Url">Return to @Model.Content.Parent.Name</a>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="return-link margin-top-30 margin-bottom-20">
+                            <a href="/">Return to NHS Informatics Merseyside homepage</a>
+                        </div>
+                    }
+                }
+            }
+        </div>
+
+        <!--Footer-->
+        <footer class="row footer">
+
+            <div class="col-xs-12">
+
+                @{
+                    if (FooterNode != null)
+                    {
+            <!--Left Footer-->
+                        <div class="col-xs-12 col-md-3">
+
+                            <h3>@FooterNode.GetPropertyValue("leftFooterHeading")</h3>
+                            <p>@FooterNode.GetPropertyValue("leftFooterDescription")</p>
+
+                            <ul>
+                                <li style="background-image:url('/images/twitter/twitter-icon.png');background-repeat:no-repeat;"><a href="https://www.twitter.com/@ConfigurationManager.AppSettings["TwitterHandle"]" target="_blank">@@@ConfigurationManager.AppSettings["TwitterHandle"]</a></li>
+                                @*<li style="background-image:url('/images/linkedin/linkedin-icon.png');background-repeat:no-repeat;">@ConfigurationManager.AppSettings["LinkedIn"] <a href="">LinkedIn</a></li>*@
+                                <li style="background-image:url('/images/youtube/youtube-icon.png');background-repeat:no-repeat;"><a href="@ConfigurationManager.AppSettings["YouTube"]" target="_blank">NHSiMerseyside</a></li>
+                            </ul>
+
+                        </div>
+
+            <!--Centre Footer-->
+                        <div class="col-xs-12 col-sm-12 col-md-5">
+
+                            <!--Tweet-->
+                            <h3>Latest Tweet</h3>
+                            @Html.Action("GetTweet", "Twitter")
+
+                        </div>
+
+            <!--Right Footer-->
+                        <div class="col-xs-12 col-md-4 col-lg-4 margin-bottom-20">
+
+                            <h3>@FooterNode.GetPropertyValue("rightFooterHeading")</h3>
+                            <p>@FooterNode.GetPropertyValue("rightFooterDescription")</p>
+
+                            <form data-toggle="validator" action="/get-in-touch/join-our-mailing-list" method="post" class="form-inline">
+
+                                <div class="form-group pull-left">
+                                    <input type="email" class="form-control" name="email" id="email" placeholder="Please enter your e-mail" required data-error="Email address is invalid">
+                                </div>
+
+                                <button type="submit" class="btn btn-primary btn-8a1538 margin-left-10" title="Sign up">Sign up</button>
+
+                            </form>
+
+                        </div>
+                    }
+                }
+                <div class="clearfix"></div>
+
+                <!--Footer Links-->
+                <div class="col-xs-12 col-md-6 footer-links">
+                    @{
+                        if (FooterLinksNode != null)
+                        {
+                            var typedRelatedLinksConverted = FooterLinksNode.GetPropertyValue<RelatedLinks>("links");
+
+                            if (typedRelatedLinksConverted != null)
+                            {
+                                <ul class="horizontal-list-group">
+                                    @foreach (var item in typedRelatedLinksConverted)
+                                    {
+                                        var linkTarget = (item.NewWindow) ? "_blank" : "_self";
+                                        <li><h4><a href="@item.Link" target="@linkTarget">@item.Caption</a></h4></li>
+                                    }
+                                </ul>
+                            }
+                        }
+                    }
+                </div>
+                <!--Website Name-->
+                <div class="col-xs-12 col-md-6 footer-links pull-right">
+                    <ul class="horizontal-list-group">
+                        <li><h4>&copy; @DateTime.Now.Year - @ConfigurationManager.AppSettings["WebsiteName"] | Website designed and developed <a href="/our-services-and-products/web-and-sharepoint-development/">@ConfigurationManager.AppSettings["WebsiteName"]</a></h4></li>
+                    </ul>
+                </div>
+
+            </div>
+
+        </footer>
+
+    </div>
+    <!--Main Container-->
+    @RenderSection("scripts", required: false)
+    <script>
+        //<![CDATA[
+
+        // SmartMenus init
+        $(function () {
+            $('#main-menu').smartmenus({
+                subMenusSubOffsetX: 1,
+                subMenusSubOffsetY: -8
+            });
+        });
+
+        // SmartMenus mobile menu toggle button
+        $(function () {
+            var $mainMenuState = $('#main-menu-state');
+            if ($mainMenuState.length) {
+                // animate mobile menu
+                $mainMenuState.change(function (e) {
+                    var $menu = $('#main-menu');
+                    if (this.checked) {
+                        $menu.hide().slideDown(250, function () { $menu.css('display', ''); });
+                    } else {
+                        $menu.show().slideUp(250, function () { $menu.css('display', ''); });
+                    }
+                });
+                // hide mobile menu beforeunload
+                $(window).bind('beforeunload unload', function () {
+                    if ($mainMenuState[0].checked) {
+                        $mainMenuState[0].click();
+                    }
+                });
+            }
+        });
+        //]]>
+    </script>
+    @Scripts.Render("~/bundles/CookiesAndSearchBar")
+    @Scripts.Render("~/bundles/SliderHome")
+    @RenderSection("scriptsbottom", required: false)
+</body>
+</html>
