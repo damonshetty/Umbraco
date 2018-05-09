@@ -1,0 +1,64 @@
+<div class="row section-carousel">
+        @{
+            //Carousel
+            IEnumerable<IPublishedContent> listCarousel = Model.Content.Carousel;
+
+            string linkUrl = "";
+            string linkTarget = "_self";
+            string linkedToName = "";
+
+            if (Model.Content.HasProperty("carousel") && Model.Content.HasValue("carousel"))
+            {
+                <div id="carousel-wrapper">
+
+                    <section class="home-carousel slider">
+
+                        @foreach (var item in listCarousel)
+                            {
+                            <div>
+
+                                @if (item.HasValue("link"))
+                                {
+                                    foreach (var link in item.GetPropertyValue<JArray>("link"))
+                                    {
+                                        linkUrl = link.Value<bool>("isInternal") ? Umbraco.NiceUrl(link.Value<int>("internal")) : link.Value<string>("link");
+                                        linkTarget = link.Value<bool>("newWindow") ? "_blank" : "_self";
+                                        linkedToName = link.Value<bool>("isInternal") ? Umbraco.TypedContent(link.Value<int>("internal")).Name : link.Value<string>("link");
+                                    }
+                                }
+                                else
+                                {
+                                    linkUrl = "";
+                                }
+
+                                @if (item.HasValue("heading") || item.HasValue("description"))
+                                    {
+                                    <a href="@linkUrl" target="@linkTarget" title="@linkedToName">
+                                        <div class="carousel-heading">
+
+                                            <h1 class="color-nhs-blue">@item.GetPropertyValue("heading")</h1>
+                                            <p>@item.GetPropertyValue("description")</p>
+
+                                        </div>
+                                    </a>
+                                    }
+
+                                @if (item.HasValue("link"))
+                                    {
+                                    <a href="@linkUrl" target="@linkTarget" title="@linkedToName">
+                                        <img alt="Carousel image for @item.Name" src="@(item.HasValue("image") ? Umbraco.TypedMedia(item.GetPropertyValue("image").ToString()).Url : "http://placehold.it/1100x300?text=1" )" />
+                                    </a>
+                                    }
+                                    else
+                                    {
+                                    <img alt="Carousel image for @item.GetPropertyValue("heading")" title="@item.GetPropertyValue("heading")" src="@(item.HasValue("image") ? Umbraco.TypedMedia(item.GetPropertyValue("image").ToString()).Url : "http://placehold.it/1100x300?text=1" )" />
+                                    }
+
+                            </div>
+                            }
+
+                    </section>
+                </div>
+            }
+        }
+    </div>
