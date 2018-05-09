@@ -1,0 +1,124 @@
+﻿@inherits UmbracoTemplatePage<News>
+@{
+    Layout = "Master.cshtml";
+}
+@using System.Configuration
+@section banner{
+
+    @{
+        if (Model.Content.BannerImage != null)
+        {
+            <section>
+                <img alt="Banner image for @CurrentPage.Name" title="Banner" src="@Umbraco.TypedMedia(Model.Content.BannerImage.ToString()).Url" class="center-block img-responsive" />
+            </section>
+        }
+    }
+
+}
+
+<div class="col-xs-12">
+
+    <!--Breadcrumb-->
+    @Html.Partial("~/Views/Partials/_breadcrumb.cshtml")
+
+    <!--Heading, Summary, Content-->
+    @Html.Partial("~/Views/Partials/_HeadingSummaryContent.cshtml")
+
+</div>
+
+<div class="col-xs-12">
+
+    <section class="col-xs-12 col-sm-12 col-md-12">
+        @{
+            IPublishedContent News = Umbraco.Content(1206);
+            //IPublishedContent News = Model.Content.AncestorOrSelf("home").Children<IPublishedContent>().Where(s => s.DocumentTypeAlias == "news").FirstOrDefault<IPublishedContent>();
+
+            string metaDataImage;
+            string imageHtml = null;
+            string colmd = "col-md-12";
+            string latestNewspaddingLeft;
+
+            IPublishedContent test = Umbraco.TypedContent(1207);
+
+            foreach (var item in News.Children.OrderByDescending(s => s.CreateDate).Take(50))
+            {
+                <article class="search-result row margin-top-20">
+
+                    @if (Umbraco.TypedContent(item.Id).GetPropertyValue<int>("image300X300px") != 0)
+                    {
+                        metaDataImage = Umbraco.TypedContent(item.Id).GetPropertyValue("image300X300px").ToString();
+                        colmd = "col-md-8";
+                        latestNewspaddingLeft = "latestNewspaddingLeft";
+                        imageHtml = ("<img class=\"width-100\" src =\"" + Umbraco.TypedMedia(Umbraco.TypedContent(item.Id).GetPropertyValue<int>("image300X300px").ToString()).Url + "\" alt = \"News image\"" + "title = \"" + item.GetPropertyValue("heading") + "\" />");
+
+                        <div class="col-xs-12 col-sm-12 col-md-4 margin-bottom-15">
+                            <a href="@Umbraco.TypedContent(item.Id).Url" title="@(item.GetPropertyValue<string>("heading"))">@Html.Raw(imageHtml)</a>
+                        </div>
+                    }
+                    else
+                    {
+                        colmd = "col-md-12";
+                        latestNewspaddingLeft = "latestNewsWithoutImagepaddingLeft";
+                        imageHtml = null;
+                    }
+
+                    <div class="col-xs-12 col-sm-12 @colmd @latestNewspaddingLeft">
+
+                        <h2 class="margin-top-0"><a href="@Umbraco.Content(item.Id).Url" title="@item.GetPropertyValue("heading")">@item.GetPropertyValue("heading")</a></h2>
+                        <p>@item.CreateDate.ToString("dd") @item.CreateDate.ToString("MMM") @item.CreateDate.ToString("yyyy")</p>
+
+                        <ul class="remove-bullets padding-left-0">
+
+                            @if (ConfigurationManager.AppSettings["FacebookHandle"].Length > 0)
+                            {
+                            <!--Facebook-->
+                                <li class="pull-left">
+
+                                    <div class="fb-share-button"
+                                         data-href="@(ConfigurationManager.AppSettings["WebsiteUrl"] + Model.Content.Url)"
+                                         data-layout="button_count"
+                                         data-mobile-iframe="true">
+                                        <a class="fb-xfbml-parse-ignore"
+                                           target="_blank"
+                                           href="https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Fdevelopers.facebook.com%2Fdocs%2Fplugins%2F&amp;src=sdkpreparse">
+                                            Share
+                                        </a>
+                                    </div>
+
+                                </li>
+                            }
+
+                                <!--Twitter-->
+                                <li class="pull-left">
+                                    <a class="twitter-share-button"
+                                       href="https://twitter.com/share"
+                                       data-size="small"
+                                       data-via="@ConfigurationManager.AppSettings["TwitterHandle"]"
+                                       data-lang="en"
+                                       data-show-count="true"
+                                       data-text="@item.GetPropertyValue("heading")">
+                                        Tweet
+                                    </a>
+                                </li>
+
+                        </ul>
+
+                        <div class="clearfix"></div>
+
+                        <script async src="//platform.twitter.com/widgets.js" charset="utf-8"></script>
+
+                        <p>@(Umbraco.Content(item.Id).HasProperty("summary") ? Umbraco.Content(item.Id).GetProperty("summary") : "") </p>
+                        <div class="clearfix"></div>
+
+                        <a href="@Umbraco.Content(item.Id).Url" class="btn btn-nhs-blue pull-right" title="Read more">Read more</a>
+
+                    </div>
+
+                </article>
+            }
+        }
+    </section>
+
+</div>
+
+<div class="clearfix"></div>
