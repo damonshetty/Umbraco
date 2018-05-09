@@ -1,0 +1,25 @@
+﻿@inherits Umbraco.Web.Mvc.UmbracoTemplatePage
+
+@{
+    IPublishedContent current = (CurrentPage);
+    Stack<dynamic> pages = new Stack<dynamic>();
+    while (current.Level > 1)
+    {
+        pages.Push(current);
+        current = current.Parent;
+    }
+}
+
+<ul class="list-inline im-breadcrumb">
+
+    <li class="list-group-item padding-0"><a href="/">Home</a></li>
+
+    @foreach (var page in pages)
+    {
+        var cls = page.Id == CurrentPage.Id ? "current" : "";
+        <li class="list-group-item @cls padding-0"><a href="@page.Url">@page.Name</a></li>
+    }
+
+    <li><span class="breadcrumb-list-arrow"></span></li>
+
+</ul>
