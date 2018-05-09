@@ -1,0 +1,124 @@
+﻿@inherits UmbracoTemplatePage<HTmlsitemap>
+@{
+	Layout = "Master.cshtml";
+}
+@{
+    IPublishedContent page = Model.Content.AncestorOrSelf("home");
+}
+
+@section banner{
+
+    @if (Model.Content.BannerImage != null)
+    {
+        <section>
+
+            <img alt="Banner image for @CurrentPage.Name" title="Banner" src="@Umbraco.TypedMedia(Model.Content.BannerImage.ToString()).Url" class="width-100 img-responsive" />
+
+        </section>
+    }
+}
+
+<div class="col-xs-12">
+
+    <!--Breadcrumb-->
+    @Html.Partial("~/Views/Partials/_breadcrumb.cshtml")
+
+    <!--Heading, Summary, Content-->
+    @Html.Partial("~/Views/Partials/_HeadingSummaryContent.cshtml")
+
+</div>
+
+<div class="col-xs-12 html-sitemap">
+
+    @Model.Content.Content
+
+    <ul>
+        <li><h3><a href="/">Home</a></h3></li>
+        @foreach (var firstLevelPage in page.Children.Where(w=>w.IsVisible()))
+        {
+            <li>
+                @{
+            //Check nonClickableInMenu
+            if (firstLevelPage.GetPropertyValue<string>("nonClickableInMenu") == "True")
+            {
+                <h3><a>@firstLevelPage.Name @Html.Raw("<span class=\"caret\"></span>")</a></h3>
+            }
+            else
+            {
+                <h3><a href="@firstLevelPage.Url">@firstLevelPage.Name @Html.Raw(firstLevelPage.Children.Where(w=>w.IsVisible()).Any() ? "<span class=\"caret\"></span>" : "")</a></h3>
+            }
+                }
+
+                @{
+                    if (firstLevelPage.Children.Where(w => w.IsVisible()).Any())
+                    {
+                @Html.Raw("<ul>")
+            }
+                }
+
+                @foreach (var secondLevelPage in firstLevelPage.Children.Where(w => w.IsVisible()))
+                {
+                    if (secondLevelPage.Children.Where(w => w.IsVisible()).Count() > 0)
+                    {
+
+                    <li>
+                        <h3><a href="@secondLevelPage.Url">@secondLevelPage.Name <span class="caret"></span></a></h3>
+                        <ul>
+                            @foreach (var thirdLevelPage in secondLevelPage.Children.Where(w => w.IsVisible()))
+                            {
+                                if (thirdLevelPage.Children.Where(w => w.IsVisible()).Count() > 0)
+                                {
+                                    <li>
+                                        <h3><a href="@thirdLevelPage.Url">@thirdLevelPage.Name <span class="caret"></span></a></h3>
+
+                                        <ul>
+                                            @foreach (var fourthLevelPage in thirdLevelPage.Children.Where(w => w.IsVisible()))
+                                            {
+                                                <li>
+                                                    <h3><a href="@fourthLevelPage.Url">@fourthLevelPage.Name</a></h3>
+                                                </li>
+                                                //if need next level menu please comment the above li and uncomment below code
+                                                @*if(fourthLevelPage.Children.Where(w=>w.IsVisible()).Count() > 0)
+    {
+        <li>
+            <a href="@fourthLevelPage.Url">@fourthLevelPage.Name <span class="caret"></span></a>
+        </li>
+    }
+    else
+    {
+        <li>
+            <a href="@fourthLevelPage.Url">@fourthLevelPage.Name</a>
+        </li>
+    }*@
+                                            }
+                                        </ul>
+                                    </li>
+                                }
+                                else
+                                {
+                                    <li>
+                                        <h3><a href="@thirdLevelPage.Url">@thirdLevelPage.Name</a></h3>
+                                    </li>
+                                }
+                            }
+                        </ul>
+                    </li>
+                    }
+                    else
+                    {
+                        <li>
+                            <h3><a href="@secondLevelPage.Url">@secondLevelPage.Name</a></h3>
+                        </li>
+                    }
+                }
+
+                @if (firstLevelPage.Children.Where(w => w.IsVisible()).Any())
+                {
+                    @Html.Raw("</ul>")
+                }
+                </li>
+        }
+    </ul>
+</div>
+
+<div class="clearfix"></div>
