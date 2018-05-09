@@ -1,0 +1,539 @@
+﻿@inherits UmbracoTemplatePage<ContentPage>
+@using Newtonsoft.Json.Linq
+@using Umbraco.Web.Models
+@using System.Text
+@{
+    Layout = "Master.cshtml";
+}
+
+@section banner{
+
+    @if (Model.Content.BannerImage != null)
+    {
+        <section>
+            <img alt="Banner image for @CurrentPage.Name" title="Banner" src="@Umbraco.TypedMedia(Model.Content.BannerImage.ToString()).Url" class="width-100 img-responsive" />
+        </section>
+    }
+
+}
+
+<div class="col-xs-12">
+    <!--Breadcrumb-->
+    @Html.Partial("~/Views/Partials/_breadcrumb.cshtml")
+
+    <!--Heading, Summary, Content-->
+    @Html.Partial("~/Views/Partials/_HeadingSummary.cshtml")
+
+</div>
+
+    @if (Model.Content.HasValue("MediaCombo1"))
+    {
+        <div class="clearfix"></div>
+        <!--Media 1-->
+        @Html.Raw(HtmlStringMediaCombo("MediaCombo1"))
+    }
+
+    <div class="col-xs-12">
+        @if (Model.Content.HasValue("content"))
+        {
+        <!--Content 1-->
+            <div class="col-xs-12">
+                @Model.Content.Content
+            </div>
+        }
+    </div>
+
+    @if (Model.Content.HasValue("MediaCombo2"))
+    {
+        <div class="clearfix"></div>
+        <!--Media 2-->
+        @Html.Raw(HtmlStringMediaCombo("MediaCombo2"))
+    }
+
+    <div class="col-xs-12">
+        @if (Model.Content.HasValue("content2"))
+        {
+        <!--Content 2-->
+            <div class="col-xs-12 main-content">
+                @Model.Content.Content2
+            </div>
+        }
+        </div>
+
+        @if (Model.Content.HasValue("MediaCombo3"))
+        {
+            <div class="clearfix"></div>
+        <!--Media 3-->
+            @Html.Raw(HtmlStringMediaCombo("MediaCombo3"))
+        }
+
+    <div class="col-xs-12">
+        @if (Model.Content.HasValue("content3"))
+        {
+        <!--Content 3-->
+            <div class="col-xs-12 main-content">
+                @Model.Content.Content3
+            </div>
+        }
+        </div>
+
+        @if (Model.Content.HasValue("MediaCombo4"))
+        {
+            <div class="clearfix"></div>
+        <!--Media 4-->
+            @Html.Raw(HtmlStringMediaCombo("MediaCombo4"))
+        }
+
+        @if (Model.Content.HasProperty("Card") && Model.Content.HasValue("Card"))
+        {
+        <!--Cards-->
+            <div class="margin-top-20">
+                @{
+                    int i = 0;
+
+                    //Class to centre cards col-md-offset-5
+                    string offset = "";
+
+                    //Border colours
+                    string topBorderClass;
+
+                    if (Model.Content.Card.Count() == 3)
+                    {
+                        offset = "card-offset";
+                    }
+
+                    List<string> borderColorsForCards = new List<string>();
+
+                    borderColorsForCards.Add("8a1538"); // red
+                    borderColorsForCards.Add("005eb8"); // blue
+                    borderColorsForCards.Add("ff6600"); // orange
+                    borderColorsForCards.Add("00a499"); // green
+
+                    borderColorsForCards.Add("00a499"); // green
+                    borderColorsForCards.Add("ff6600"); // orange
+                    borderColorsForCards.Add("005eb8"); // blue
+                    borderColorsForCards.Add("8a1538"); // red
+
+                    foreach (var card in Model.Content.Card)
+                    {
+                        //Reset list to zero if end of list reached
+                        if (borderColorsForCards.Count == i)
+                        {
+                            i = 0;
+                            topBorderClass = borderColorsForCards[i];
+                        }
+                        else
+                        {
+                            topBorderClass = borderColorsForCards[i];
+                        }
+
+                        var cardLinkUrl = "";
+                        var cardLinkTarget = "";
+                        var cardCaption = "";
+
+                        //Check document type alias
+                        if (card.DocumentTypeAlias == "cardForNestedContent")
+                        {
+                            if (card.HasValue("link"))
+                            {
+                                foreach (var item in card.GetPropertyValue<JArray>
+                                    ("link"))
+                                {
+                                    cardLinkUrl = (item.Value<bool>
+                                        ("isInternal")) ? Umbraco.NiceUrl(item.Value<int>
+                                            ("internal")) : item.Value<string>
+                                                ("link");
+                                    cardLinkTarget = item.Value<bool>
+                                        ("newWindow") ? "_blank" : "_self";
+                                    cardCaption = item.Value<string>
+                                        ("caption");
+                                }
+                            }
+
+                            //3 cards - offset
+                            if (i > 0)
+                            {
+                                offset = "";
+                            }
+
+                            <div class="col-xs-12 col-sm-6 col-md-3 @offset">
+
+                                @if (card.HasValue("heading"))
+                                {
+                                    <div class="card margin-bottom-30">
+
+                                        <a href="@cardLinkUrl" target="@cardLinkTarget" title="@cardCaption">
+
+                                            <!--Heading-->
+                                            @if (card.HasValue("heading"))
+                                            {
+                                                <div class="col-xs-12 card-heading">
+
+                                                    <h3>
+                                                        @card.GetPropertyValue("heading")
+                                                    </h3>
+
+                                                    @if (card.HasValue("summary"))
+                                                    {
+                                                        <h3 class="card-summary">@card.GetPropertyValue("summary")</h3>
+                                                    }
+
+                                                </div>
+                                            }
+                                            <img alt="Card image for @card.GetPropertyValue("heading")" title="@card.GetPropertyValue("heading")" src="@(card.HasValue("image300X300px") ? Umbraco.TypedMedia(card.GetPropertyValue("image300X300px").ToString()).Url : "http://placehold.it/300x380?text=" + i)" class="width-100 border-radius-8" />
+
+                                        </a>
+
+                                        <div class="card-buttons">
+                                            <!--Find Out More Button-->
+                                            @if (!cardLinkUrl.IsNullOrWhiteSpace())
+                                            {
+                                                <div class="col-xs-12 button-find-out-more-home">
+                                                    <ul>
+                                                        <li><a href="@cardLinkUrl" class="btn btn-@topBorderClass" role="button" target="@cardLinkTarget" title="@cardCaption">@cardCaption</a></li>
+                                                    </ul>
+                                                </div>
+                                            }
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        }
+                        i++;
+                    }
+                }
+            </div>
+                    }
+
+
+<!--Links to child pages-->
+@{
+    if (Model.Content.Children.Any() & !Model.Content.HideChildCardLinks)
+    {
+        <div class="col-xs-12 section-cards">
+
+            <div class="margin-top-20">
+
+                @{
+                    //Class to centre cards col-md-offset-5
+                    int iBorderColor = 0;
+                    string backgroundColor;
+
+                    List<string> borderColors = new List<string>();
+
+                    if (Model.Content.Children.Any())
+                    {
+                        borderColors.Add("8a1538"); // red
+                        borderColors.Add("005eb8"); // blue
+                        borderColors.Add("ffb81c"); // orange
+                        borderColors.Add("00a499"); // green
+
+                        borderColors.Add("00a499"); // green
+                        borderColors.Add("ffb81c"); // orange
+                        borderColors.Add("005eb8"); // blue
+                        borderColors.Add("8a1538"); // red
+
+                        foreach (var card in Model.Content.Children.Where(w => w.IsVisible()))
+                        {
+                            //Reset list to zero if end of list reached
+                            if (iBorderColor == borderColors.Count)
+                            {
+                                iBorderColor = 0;
+                            }
+
+                            backgroundColor = borderColors.ElementAt(iBorderColor);
+
+                            iBorderColor++;
+
+                            <div class="col-xs-12 col-sm-6 col-md-3 margin-bottom-30">
+
+                                <a href="@card.Url" title="@card.GetPropertyValue("heading")">
+
+                                    <div class="col-xs-12 landing-page-card-links" style="background-color:#@backgroundColor;display:block;">
+
+                                        <!--Image-->
+                                        @if (card.HasValue("metadataImage"))
+                                        {
+                                            try
+                                            {
+                                                <img src="@Umbraco.TypedMedia(card.GetPropertyValue("metadataImage").ToString()).Url" style="width:80%;" alt="@card.Name">
+                                            }
+                                            catch (Exception ex)
+                                            {
+                                                <img src="/images/placehold/placehold-200x200.png" style="width:80%;" alt="Placeholder" title="Placeholder" />
+                                            }
+                                        }
+                                        else
+                                        {
+                                            <img src="/images/placehold/placehold-200x200.png" style="width:80%;" alt="Placeholder" title="Placeholder" />
+                                        }
+
+                                        <!--Heading-->
+                                        @if (card.HasValue("heading"))
+                                        {
+                                            <h3>@card.GetPropertyValue("heading")<span class="card-list-arrow"></span></h3>
+                                        }
+                                    </div>
+                                </a>
+                            </div>
+                        }
+                    }
+                }
+                <div class="clearfix"></div>
+            </div>
+        </div>
+                    }
+}
+
+@functions{
+    private StringBuilder HtmlStringMediaCombo(string propertyName)
+    {
+        StringBuilder stringBuilder = new StringBuilder();
+        IEnumerable<IPublishedContent> mediaCombo;
+
+        foreach (var section in Model.Content.GetPropertyValue<IEnumerable<IPublishedContent>>(propertyName))
+        {
+            mediaCombo = section.GetPropertyValue<IEnumerable<IPublishedContent>>("images");
+
+            //Vertical list of images
+            if (section.DocumentTypeAlias == "sectionForVerticalListOfImages")
+            {
+                stringBuilder.Append("<div class=\"col-xs-12 margin-left-15\">");
+
+                if (section.HasValue("verticalImageSectionTitle"))
+                {
+                    stringBuilder.Append("<h2>" + section.GetPropertyValue<string>("verticalImageSectionTitle") + "</h2>");
+                }
+
+                foreach (var image in mediaCombo)
+                {
+                    stringBuilder.Append("<div class=\"col-xs-12 padding-top-20 vertical-images\">");
+                    stringBuilder.Append("<div class=\"col-xs-12 col-md-4\">");
+                    stringBuilder.Append("<img src =\"" + Umbraco.TypedMedia(image.GetPropertyValue<Image>("verticalImage").ToString()).Url + "\" alt=\"" + image.GetPropertyValue<string>("title") + "\" title=\"" + image.GetPropertyValue<string>("title") + "\" class=\"img-responsive\" />");
+                    stringBuilder.Append("</div>");
+                    stringBuilder.Append("<div class=\"col-xs-12 col-md-8\">");
+
+                    if (image.HasValue("title"))
+                    {
+                        //check anchor
+                        if (image.HasValue("anchorTagId"))
+                        {
+                            stringBuilder.Append("<h3><a id=\"" + image.GetPropertyValue<string>("anchorTagId") + "\">" + image.GetPropertyValue<string>("title") + "</a></h3>");
+                        }
+                        else
+                        {
+                            stringBuilder.Append("<h3>" + image.GetPropertyValue<string>("title") + "</h3>");
+                        }
+                    }
+
+                    if (image.HasValue("summary"))
+                        stringBuilder.Append(Html.Raw(image.GetPropertyValue<string>("summary")));
+
+                    stringBuilder.Append("</div>");
+                    stringBuilder.Append("</div>");
+                }
+
+                stringBuilder.Append("</div>");
+                stringBuilder.Append("<div class=\"clearfix\"></div>");
+            }
+
+            //Horizontal list of images
+            else if (section.DocumentTypeAlias == "sectionForHorizontalListOfImages")
+            {
+                string linkTarget = "";
+                string linkUrl = "";
+
+                stringBuilder.Append("<div class=\"col-xs-12 margin-left-15\">");
+
+                if (section.HasValue("horizontalImageSectionTitle"))
+                {
+                    stringBuilder.Append("<h2>" + section.GetPropertyValue<string>("horizontalImageSectionTitle") + "</h2>");
+                }
+
+                stringBuilder.Append("</div>");
+
+                foreach (var image in mediaCombo)
+                {
+                    var typedRelatedLinksConverted = image.GetPropertyValue<RelatedLinks>("link");
+
+                    if (typedRelatedLinksConverted != null)
+                    {
+                        foreach (var item in typedRelatedLinksConverted)
+                        {
+                            linkTarget = (item.NewWindow) ? "_blank" : "";
+                            linkUrl = item.Link;
+                        }
+                    }
+                    else
+                    {
+                        linkTarget = "";
+                        linkUrl = "";
+                    }
+
+                    stringBuilder.Append("<div class=\"col-xs-12 col-sm-6 col-md-4\">");
+
+                    bool success = false;
+
+                    try
+                    {
+                        var test = Umbraco.TypedMedia(image.GetPropertyValue<Image>("horizontalImage").ToString()).Url;
+                        success = true;
+                    }
+                    catch (Exception ex)
+                    {
+                        success = false;
+                    }
+                    finally
+                    {
+                        if (success)
+                        {
+                            //Check if link
+                            if (image.HasValue("link"))
+                            {
+                                stringBuilder.Append("<a href=\"" + linkUrl + "\" target=\"" + linkTarget + "\">");
+                                stringBuilder.Append("<img src=\"" + Umbraco.TypedMedia(image.GetPropertyValue<Image>("horizontalImage").ToString()).Url + "\" alt=\"" + image.GetPropertyValue<string>("title") + "\" title=\"" + image.GetPropertyValue<string>("title") + "\" class=\"padding-top-20 centre-block\" />");
+                                stringBuilder.Append("</a>");
+                            }
+                            else
+                            {
+                                stringBuilder.Append("<img src=\"" + Umbraco.TypedMedia(image.GetPropertyValue<Image>("horizontalImage").ToString()).Url + "\" alt=\"" + image.GetPropertyValue<string>("title") + "\" title=\"" + image.GetPropertyValue<string>("title") + "\" class=\"padding-top-20 centre-block\" />");
+                            }
+
+                            if (image.HasValue("titleUnderImage"))
+                            {
+                                stringBuilder.Append("<h3 class=\"text-align-center\">" + image.GetPropertyValue<string>("titleUnderImage") + "</h3>");
+                            }
+                            else
+                            {
+                                //stringBuilder.Append("<h3>&nbsp;</h3>");
+                            }
+                        }
+                    }
+                    stringBuilder.Append("</div>");
+                }
+            }
+            //Full width banner image
+            else if (section.DocumentTypeAlias == "fullWidthBannerImage")
+            {
+                string image = section.GetPropertyValue<string>("image");
+
+                stringBuilder.Append("<div class=\"col-xs-12\">");
+
+                try
+                {
+                    stringBuilder.Append("<img src=\"" + Umbraco.TypedMedia(image).Url + "\" alt=\"" + section.GetPropertyValue<string>("imageTitle") + "\" title=\"" + section.GetPropertyValue<string>("imageTitle") + "\" class=\"img-responsive margin-bottom-30 centre-block\" />");
+                }
+                catch (Exception ex)
+                {
+                }
+                stringBuilder.Append("</div>");
+            }
+
+            //Carousel
+            else if (section.DocumentTypeAlias == "carousel")
+            {
+                mediaCombo = section.GetPropertyValue<IEnumerable<IPublishedContent>>("carouselImages");
+                var linkUrl = "";
+                var linkTarget = "";
+                var linkedToName = "";
+
+                //Top Level
+                IEnumerable<IPublishedContent> carouselImages = section.GetPropertyValue<IEnumerable<IPublishedContent>>("carouselImages");
+
+                bool hasLink = false;
+                int j = 1;
+
+                stringBuilder.Append("<section class=\"key-facts-slider slider content-page-slider \">");
+
+                foreach (var carouselImage in carouselImages)
+                {
+                    if (carouselImage.HasValue("link"))
+                    {
+                        hasLink = true;
+
+                        foreach (var link in carouselImage.GetPropertyValue<RelatedLinks>("link"))
+                        {
+                            linkUrl = link.IsInternal ? link.Link  : link.Link;
+                            linkTarget = link.NewWindow ? "_blank" : "_self";
+
+                            try
+                            {
+                                linkedToName = link.Caption;
+                            }
+                            catch (Exception ex)
+                            {
+                                linkedToName = "";
+                            }
+                        }
+                    }
+                    else
+                    {
+                        hasLink = false;
+                    }
+
+                    if (hasLink)
+                    {
+                        stringBuilder.Append("<a href=\"" + linkUrl + "\" target=\"" + linkTarget + "\" title=\"" + linkedToName + "\">");
+
+                        stringBuilder.Append("<div>");
+
+                        //Add Image
+                        if (carouselImage.HasValue("image") & carouselImage.GetPropertyValue("image") != null)
+                        {
+                            stringBuilder.Append("<img src=\"" + Umbraco.TypedMedia(carouselImage.GetPropertyValue<Image>("image").ToString()).Url + "\" alt=\"" + carouselImage.GetPropertyValue<string>("title") + "\" title=\"" + carouselImage.GetPropertyValue<string>("title") + "\">");
+                        }
+                        else
+                        {
+                            stringBuilder.Append("<img src=\"http://placehold.it/300x100?text=" + j + "\" alt=\"Placeholder\" title=\"Placeholder\">");
+                        }
+
+                        stringBuilder.Append("<div class=\"carousel-with-tabs-landing-page-text-overlay\">");
+                        stringBuilder.Append("<h4>" + carouselImage.GetPropertyValue<string>("title") + "</h4>");
+                        stringBuilder.Append("<p>yeee" + carouselImage.GetPropertyValue<string>("summary") + "</p>");
+                        stringBuilder.Append("</div>");
+                        stringBuilder.Append("</div>");
+
+                        stringBuilder.Append("</a>");
+                    }
+                    else
+                    {
+                        stringBuilder.Append("<div>");
+
+                        //Image
+                        if (carouselImage.HasValue("image") & carouselImage.GetPropertyValue("image") != null)
+                        {
+                            stringBuilder.Append("<img src=\"" + Umbraco.TypedMedia(carouselImage.GetPropertyValue<Image>("image").ToString()).Url + "\" alt=\"" + carouselImage.GetPropertyValue<string>("title") + " title=\"" + carouselImage.GetPropertyValue<string>("title") + "\">");
+                        }
+                        else
+                        {
+                            stringBuilder.Append("<img src=\"http://placehold.it/300x100?text=" + j + "\" alt=\"Placeholder\" title=\"Placeholder\">");
+                        }
+
+                        stringBuilder.Append("<div class=\"carousel-with-tabs-landing-page-text-overlay\">");
+                        stringBuilder.Append("<h3>" + carouselImage.GetPropertyValue<string>("title") + "</h3>");
+                        stringBuilder.Append("<p>" + carouselImage.GetPropertyValue<string>("summary") + "</p>");
+                        stringBuilder.Append("</div>");
+                        stringBuilder.Append("</div>");
+                    }
+                }
+                //stringBuilder.Append("</div>");
+
+                j++;
+
+                stringBuilder.Append("</section>");
+            }
+
+            //YouTube video
+            else if (section.DocumentTypeAlias == "youTubeVideo")
+            {
+                stringBuilder.Append("<div class=\"col-xs-12 text-align-center\">");
+                stringBuilder.Append(section.GetPropertyValue<string>("youTubeLink"));
+                stringBuilder.Append("</div>");
+            }
+        }
+
+        stringBuilder.Append("<div class=\"clearfix\"></div>");
+
+        return stringBuilder;
+    }
+}
