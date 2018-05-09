@@ -19,7 +19,4 @@ https://our.umbraco.org/download/releases/
 
 ## Authors
 
-* **Damon Shetty** - *Initial work* - [Ultrafastcode](https://twitter.com/ultrafastcode)
-
-See also the list of [contributors](https://github.com/your/project/contributors) who participated in this project.
-
+* **Damon Shetty** - [Ultrafastcode](https://twitter.com/ultrafastcode)
