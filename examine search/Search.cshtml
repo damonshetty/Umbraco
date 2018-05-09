@@ -1,0 +1,188 @@
+﻿@inherits UmbracoTemplatePage<Search>
+@using Examine.LuceneEngine.SearchCriteria
+@using Umbraco.Core
+@using Umbraco.Core.Models
+@using Umbraco.Core.Services
+@using System
+@{
+    Layout = "Master.cshtml";
+}
+
+@section banner{
+
+}
+
+<div class="col-xs-12">
+
+    <!--Breadcrumb-->
+    @Html.Partial("~/Views/Partials/_breadcrumb.cshtml")
+
+    <!--Heading, Summary, Content-->
+    @Html.Partial("~/Views/Partials/_HeadingSummaryContent.cshtml")
+
+
+    @{
+        int count = 0;
+
+        var q = Request.QueryString["search"];
+
+        if (!string.IsNullOrEmpty(Request.QueryString["search"]))
+        {
+            //container for the searcher
+            Examine.Providers.BaseSearchProvider Searcher = null;
+
+            IEnumerable<SearchResult> SearchResults = null;
+
+            //Get querystring
+            var query = Request.QueryString["search"];
+
+            //Fetching our SearchProvider by giving it the name of our searchprovider
+            Searcher = Examine.ExamineManager.Instance.SearchProviderCollection["MultiIndexSearcher"];
+
+            //SearchResults = Searcher.Search(query, true).TakeWhile(x => x.Score > 0.02f).OrderByDescending(x => x.Score).OrderByDescending(x => x.Fields["updateDate"]);
+            //SearchResults = Searcher.Search(query, true).TakeWhile(x => x.Score > 0.02f).OrderByDescending(x => x.Score);
+
+            SearchResults = Searcher.Search(q, true).OrderByDescending(x => x.Score).TakeWhile(x => x.Score > 0.0f);
+
+            UmbracoHelper helper = new UmbracoHelper(UmbracoContext.Current);
+
+            count = SearchResults.Count();
+
+            <div class="col-xs-12">
+
+                <h3><strong id="count"></strong> results were found for the search for <strong>@Request.QueryString["search"]</strong></h3>
+
+                @{
+                    IPublishedContent media;
+
+                    //iterate the results
+                    foreach (var searchResult in SearchResults)
+                    {
+                        //Files - pdf, doc
+                        if (searchResult.Fields["nodeTypeAlias"].ToString().ToLower() == "file")
+                        {
+                            try
+                            {
+                                //Need to check if this file is on a page
+                                media = Umbraco.TypedMedia(searchResult.Id);
+
+                                <article class="search-result row">
+                                    <div class="col-xs-12">
+                                        <h3><a href="@media.Url" target="_blank">@searchResult.Fields["nodeName"].Replace("_", " ")</a></h3>
+                                    </div>
+                                </article>
+                            }
+                            catch (Exception ex)
+                            {
+                                count--;
+                            }
+                        }
+                        @*//Images jpg, png,
+                            else if (searchResult.Fields["nodeTypeAlias"].ToString().ToLower() == "image")
+                            {
+                                try
+                                {
+                                    media = Umbraco.TypedMedia(searchResult.Id);
+
+                                    <article class="search-result row">
+                                        <div class="col-xs-12 col-md-3 thumbnail" style="margin-right:5px;">
+                                            <a href="@Umbraco.TypedMedia(searchResult.Id).Url" title="@searchResult.Fields["nodeName"]" target="_blank">@Html.Raw("<img src =\"" + Umbraco.TypedMedia(searchResult.Id).Url + "\" alt = \"" + @searchResult.Fields["nodeName"] + "\" class=\"width-100\" />")</a>
+                                        </div>
+
+                                        <div class="col-xs-12 col-md-8">
+                                            <h3><a href="@Umbraco.TypedMedia(searchResult.Id).Url" title="@searchResult.Fields["nodeName"]" target="_blank">@searchResult.Fields["nodeName"]</a></h3>
+                                            <a href="@Umbraco.TypedMedia(searchResult.Id).Url" type="button" class="btn btn-success pull-left" target="_blank" title="Link to image" style="margin-bottom:10px;">Link to image</a>
+                                        </div>
+                                    </article>
+                                }
+                                catch (Exception ex)
+                                {
+                                }
+                            }*@
+
+                        //Pages
+                        else if (searchResult.Fields["nodeTypeAlias"].ToString().ToLower() != "image")
+                        {
+                            <article class="search-result row">
+                                <div class="col-xs-12">
+
+                                    @{
+
+                                        if (searchResult.Fields["hideFromSearch"] != "1")
+                                        {
+
+                                            <h3><a href="@Umbraco.NiceUrl(searchResult.Id)">@searchResult.Fields["nodeName"]</a></h3>
+
+
+                                            if (searchResult.Fields.ContainsKey("summary"))
+                                            {
+                                                try
+                                                {
+                                                    @(searchResult.Fields["summary"].ToString().Substring(0, 500) + "...")
+                                                }
+                                                catch (Exception ex)
+                                                {
+                                                    @(searchResult.Fields["summary"].ToString().Substring(0, searchResult.Fields["summary"].ToString().Length) + "...")
+                                                }
+                                            }
+
+                                        }
+
+                                    }
+                                </div>
+                            </article>
+                            }
+                      }
+                }
+            </div>
+             }
+
+    }
+</div>
+
+<div class="clearfix"></div>
+
+@functions{
+
+    private IRelationService _relationService;
+
+    private bool IsPdf(int nodeId, UmbracoHelper helper)
+    {
+        _relationService = ApplicationContext.Current.Services.RelationService;
+
+        var mediaItem = helper.TypedMedia(nodeId);
+
+        // Not sure if every IPublishedContent has this property
+        return mediaItem.HasProperty("umbracoExtension") && mediaItem.GetPropertyValue<string>("umbracoExtension") == "pdf" || mediaItem.GetPropertyValue<string>("umbracoExtension") == "docx";
+    }
+
+    private bool ShouldIndex(int nodeId, UmbracoHelper helper)
+    {
+        // Check if media item is PDF
+        if (!IsPdf(nodeId, helper)) return false;
+
+        // Check if if the PDF is in the Relations
+        if (!_relationService.IsRelated(nodeId)) return false;
+
+        // If any document with this PDF is published, add to index. If not, cancel
+        var relations = _relationService.GetByChildId(nodeId);
+        if (!AnyPublished(relations.Select(r => r.ParentId), helper)) return false;
+
+        return true;
+    }
+
+    private static bool AnyPublished(IEnumerable<int> nodeIds, UmbracoHelper helper)
+    {
+        if (nodeIds.Select(id => helper.TypedContent(id)).Any(n => n != null)) return true;
+        return false;
+    }
+
+}
+
+@section scriptsbottom{
+    <script>
+        $(document).ready(function () {
+            $('#count').html(@count);
+        });
+    </script>
+}

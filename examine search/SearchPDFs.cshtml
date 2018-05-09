@@ -1,0 +1,108 @@
+﻿@inherits UmbracoTemplatePage<SearchPdfs>
+@using Examine.LuceneEngine.SearchCriteria
+@{
+    Layout = "Master.cshtml";
+}
+
+<div class="col-xs-12">
+
+    <!--Breadcrumb-->
+    @Html.Partial("~/Views/Partials/_breadcrumb.cshtml")
+
+    <!--Heading, Summary, Content-->
+    @Html.Partial("~/Views/Partials/_HeadingSummaryContent.cshtml")
+
+</div>
+
+<form class="form-inline">
+    <fieldset>
+        <!-- Form Name -->
+        <legend></legend>
+
+        <!-- Search input-->
+        <div class="form-group">
+            <label for="searchinput">Search PDFs</label>
+            <input id="searchinput" name="searchpdf" type="search" placeholder="enter search terms" class="form-control input-md" required="" value="@Request.QueryString["searchpdf"]">
+        </div>
+
+        <!-- Button -->
+        <div class="form-group">
+            <button id="singlebutton" name="singlebutton" class="btn btn-primary">Search PDFs</button>
+        </div>
+
+    </fieldset>
+</form>
+
+@{
+    if (!string.IsNullOrEmpty(Request.QueryString["searchpdf"]))
+    {
+        //Get querystring
+        var q = Request.QueryString["searchpdf"];
+
+        //Fetching our SearchProvider by giving it the name of our searchprovider
+        var SearcherPDFs = Examine.ExamineManager.Instance.SearchProviderCollection["MediaSearcher"];
+
+        IEnumerable<SearchResult> searchResults = null;
+
+        //Searching and ordering the result by score, and we only want to get the results that has a minimum of 0.05(scale is up to 1.)
+
+        //searchResults = SearcherPDFs.Search(q, true).OrderByDescending(x => x.Score).TakeWhile(x => x.Score > 0.05f);
+
+        searchResults = SearcherPDFs.Search(q, true).OrderByDescending(x => x.Score);
+
+        <div class="container">
+
+            <hgroup class="mb20">
+                <h2 class="lead"><strong class="text-danger">@(searchResults.Any() ? searchResults.Count().ToString() : "0")</strong> results were found for the search for <strong class="text-danger">@Request.QueryString["searchpdf"]</strong></h2>
+            </hgroup>
+
+            @{
+        foreach (var item in searchResults)
+        {
+            <article class="search-result row">
+
+                <!--Wrapper-->
+                <div class="col-xs-12">
+
+                    <!--Description for Media-->
+                    <div class="col-xs-12">
+                        <h3 class="margin-top-0"><a href="@Umbraco.Media(item.Id).Url" title="@item.Fields["nodeName"]" target="_blank">@item.Fields["nodeName"]</a></h3>
+                        <p>@item.Fields["updateDate"].AsDateTime().ToString("dd") @item.Fields["updateDate"].AsDateTime().ToString("MMM") @item.Fields["updateDate"].AsDateTime().ToString("yyyy")</p>
+                        <p>@(Umbraco.Content(item.Id).HasProperty("summary") ? Umbraco.Content(item.Id).GetPropertyValue("summary") : "") </p>
+                        <div class="clearfix"></div>
+                        <a href="@Umbraco.Media(item.Id).Url" target="_blank" type="button" class="btn btn-success btn-purple pull-left" title="Read more">Read more</a>
+                    </div>
+
+                </div>
+
+            </article>
+                <hr />
+        }
+            }
+
+        </div>
+    }
+}
+
+@section banner{
+
+    @if (Model.Content.BannerImage != null)
+    {
+        <section>
+
+            <img alt="Banner image for @CurrentPage.Name" title="Banner" src="@Umbraco.TypedMedia(Model.Content.BannerImage.ToString()).Url" class="width-100 img-responsive" />
+
+        </section>
+    }
+}
+
+@if (!string.IsNullOrWhiteSpace(Model.Content.Summary.ToString()))
+{
+    <div class="lead text-center col-xs-12">@Model.Content.Summary</div>
+}
+
+<div class="col-xs-12">
+
+    @Model.Content.Content
+
+</div>
